@@ -57,10 +57,10 @@
 	  displayName: 'ArtistPage',
 	
 	  getInitialState: function () {
-	    return { artist: null, searchFieldVal: "" };
+	    return { artist: ArtistStore.currentArtist(), searchFieldVal: "" };
 	  },
 	  componentDidMount: function () {
-	    this.newArtistListener = ArtistStore.addListener(this.updateArtist);
+	    this.newArtistListener = ArtistStore.addListener(this._onChange);
 	  },
 	  componentWillUnmount: function () {
 	    this.newArtistListener.remove();
@@ -72,11 +72,8 @@
 	    // band names that use characters that are not numbers or letters:  
 	    // https://www.theguardian.com/music/musicblog/2010/aug/11/bands-names-symbols
 	    // for assignment: using regex to make sure there are only spaces characters and digits
-	    var formData = this.state.searchFieldVal;
-	    var readyToSubmit = false;
-	
-	    if (!formData.match(/[^a-z\d\s]/i)) {
-	      formData = this.scrubData(formData);
+	    if (!this.state.searchFieldVal.match(/[^a-z\d\s]/i)) {
+	      var formData = this.scrubData(this.state.searchFieldVal);
 	      ClientActions.fetchArtistByName(formData);
 	    } else {
 	      console.log("error message to user");
@@ -94,14 +91,13 @@
 	
 	    return formData;
 	  },
-	  updateArtist: function () {
-	    var currentArtist = ArtistStore.currentArtist();
-	    debugger;
-	    this.setState({ artist: currentArtist });
+	  _onChange: function () {
+	    this.setState({ artist: ArtistStore.currentArtist() });
 	  },
 	  render: function () {
-	    if (this.state.artist == null) {
-	      return React.createElement(SearchForm, null);
+	    if (Object.keys(this.state.artist).length === 0 && this.state.artist.constructor === Object) {
+	      return React.createElement(SearchForm, { submitSearchForm: this.submitSearchForm,
+	        handleFormChange: this.handleSearchFormChange });
 	    }
 	    return React.createElement(
 	      'div',
@@ -21535,12 +21531,12 @@
 	var _currentArtist = {};
 	
 	var addNewArtist = function (artist) {
-	  _currentArtist = artist;
+	  return _currentArtist = artist;
 	};
 	
 	ArtistStore.currentArtist = function () {
 	  if (Object.keys(_currentArtist).length === 0 && _currentArtist.constructor === Object) {
-	    return null;
+	    return {};
 	  } else {
 	    return _currentArtist;
 	  }
@@ -28348,7 +28344,6 @@
 	      url: "https://api.spotify.com/v1/search?q=" + artistName + "&type=artist",
 	      success: function (resp) {
 	        var targetArtist = resp.artists.items[0];
-	        debugger;
 	        ServerActions.receiveArtist(targetArtist);
 	      },
 	      error: function (resp) {
@@ -28395,7 +28390,7 @@
 	          onChange: this.props.handleFormChange,
 	          placeholder: "Search For Artist" })
 	      ),
-	      React.createElement("input", { type: "Submit", value: "Search" })
+	      React.createElement("input", { type: "Submit", value: "Search", readOnly: true })
 	    );
 	  }
 	});

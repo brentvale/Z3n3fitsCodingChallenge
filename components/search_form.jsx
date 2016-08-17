@@ -10,7 +10,7 @@ var SearchForm = React.createClass({
                   onChange={this.props.handleFormChange}
                   placeholder="Search For Artist"/>
         </label>
-        <input type="Submit" value="Search" />
+        <input type="Submit" value="Search" readOnly/>
       </form>
     )
   }

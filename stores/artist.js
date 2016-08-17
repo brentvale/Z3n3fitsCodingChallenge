@@ -6,12 +6,12 @@ var ArtistStore = new Store(AppDispatcher);
 var _currentArtist = {};
 
 var addNewArtist = function(artist){
-  _currentArtist = artist;
+  return _currentArtist = artist;
 };
 
 ArtistStore.currentArtist = function(){
   if(Object.keys(_currentArtist).length === 0 && _currentArtist.constructor === Object){
-    return null;
+    return {};
   } else {
     return _currentArtist;
   }

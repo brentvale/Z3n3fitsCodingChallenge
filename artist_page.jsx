@@ -9,10 +9,10 @@ var ArtistInfo = require('./components/artist_info.jsx').ArtistInfo;
 
 var ArtistPage = React.createClass({
   getInitialState: function(){
-    return { artist: null, searchFieldVal: "" };
+    return { artist: ArtistStore.currentArtist(), searchFieldVal: "" };
   },
   componentDidMount: function(){
-    this.newArtistListener = ArtistStore.addListener(this.updateArtist);
+    this.newArtistListener = ArtistStore.addListener(this._onChange);
   },
   componentWillUnmount: function(){
     this.newArtistListener.remove();
@@ -24,11 +24,8 @@ var ArtistPage = React.createClass({
     // band names that use characters that are not numbers or letters:  
     // https://www.theguardian.com/music/musicblog/2010/aug/11/bands-names-symbols
     // for assignment: using regex to make sure there are only spaces characters and digits
-    var formData = this.state.searchFieldVal;
-    var readyToSubmit = false;
-    
-    if(!formData.match(/[^a-z\d\s]/i)){
-      formData = this.scrubData(formData);
+    if(!this.state.searchFieldVal.match(/[^a-z\d\s]/i)){
+      var formData = this.scrubData(this.state.searchFieldVal);
       ClientActions.fetchArtistByName(formData);
     } else {
       console.log("error message to user");
@@ -46,15 +43,14 @@ var ArtistPage = React.createClass({
     
     return formData;
   },
-  updateArtist: function(){
-    var currentArtist = ArtistStore.currentArtist();
-    debugger
-    this.setState({artist: currentArtist});
+  _onChange: function(){
+    this.setState({artist: ArtistStore.currentArtist()});
   },
   render: function(){
-    if(this.state.artist == null){
-      return <SearchForm />;
-    }
+    if(Object.keys(this.state.artist).length === 0 && this.state.artist.constructor === Object){
+      return <SearchForm submitSearchForm={this.submitSearchForm} 
+                               handleFormChange={this.handleSearchFormChange}/>;
+    } 
     return(
       <div>
         <SearchForm  submitSearchForm={this.submitSearchForm} 
