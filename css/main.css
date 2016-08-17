@@ -1,0 +1,7 @@
+form{
+  float:right;
+  margin-right:5%;
+}
+form > input {
+  margin-left:20px;
+}

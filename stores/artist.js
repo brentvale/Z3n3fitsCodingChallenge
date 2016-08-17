@@ -3,26 +3,19 @@ var AppDispatcher = require('../dispatcher/dispatcher.js');
 var ArtistConstants = require('../constants/artistConstants.js');
 var ArtistStore = new Store(AppDispatcher);
 
-//save reference to old artists to be able to avoid api calls
-var _artists = {};
-var _currentArtist = {}
+var _currentArtist = {};
 
 var addNewArtist = function(artist){
-  _artists[artist.name] = artist;
   _currentArtist = artist;
 };
 
-ArtistStore.artistByName = function(artistName){
-  //probably will have to downcase to avoid conflicts
-  if(_artists[artistName]){
-    return _artists[artistName];
+ArtistStore.currentArtist = function(){
+  if(Object.keys(_currentArtist).length === 0 && _currentArtist.constructor === Object){
+    return null;
   } else {
-    return "Unable to Find that Artist: Searching Spotify API"
+    return _currentArtist;
   }
 };
-ArtistStore.currentArtist = function(){
-  return _currentArtist;
-}
 
 ArtistStore.__onDispatch = function (payload) {
   switch(payload.actionType) {
