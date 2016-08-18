@@ -1,25 +1,83 @@
+h1{
+  display:inline-block;
+  margin-left: 20px;
+  vertical-align:top;
+}
 form{
-  float:right;
-  margin-right:5%;
+  margin:15px 30px 0px 0px;
+  position:fixed;
+  right:0;
+  z-index:10;
 }
 form > input {
   margin-left:20px;
 }
 ul{
+  display:block;
   list-style-type:none;
+  padding-top: 250px;
   padding-left: 0;
+  position:relative;
 }
 li{
   display:inline-block;
 }
 li > div{
   display:inline-block;
-  height: 200px;
+  height: 300px;
   width: 200px;
+}
+p{
+  text-align:center;
+}
+p.info{
+  display:block;
+  margin-left: 20px;
+  text-align:left;
 }
 .center-block{
  left:0;
  right:0;
  margin-left: auto;
  margin-right: auto; 
+}
+.album-cover{
+  height:150px;
+  margin-top:20px;
+  width: 150px;
+}
+.album-cover:hover{
+  cursor:pointer;
+  cursor:hand;
+  -webkit-animation:show-record 0.2s linear forwards;
+  -moz-animation:show-record 0.2s linear forwards;
+  animation:show-record 0.2s linear forwards;
+}
+@-moz-keyframes show-record { 100% { -moz-transform: rotate(10deg); } }
+@-webkit-keyframes show-record { 100% { -webkit-transform: rotate(10deg); } }
+@keyframes show-record { 100% { -webkit-transform: rotate(10deg); transform:rotate(10deg); } }
+.album-title{
+  margin-top:10px;
+}
+.artist-info-container{
+  background-color:white;
+  height:250px;
+  position:fixed;
+  width: 100%;
+  z-index: 1;
+}
+.artist-info-container > div{
+  display: inline-block;
+}
+.artist-info-container > img{
+  vertical-align:top;
+}
+/*break point for profile image enlargement*/
+@media screen and (min-width: 1100px){
+  .artist-info-container{
+    height:550px;
+  }
+  ul{
+    padding-top: 550px;
+  }
 }

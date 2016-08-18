@@ -13,7 +13,21 @@ var addNewArtist = function(artist){
 };
 
 var addAlbumsToArtist = function(albumsArray, artistId){
-  _albums[artistId] = albumsArray;
+  if(typeof(_albums[artistId]) == "undefined"){
+    _albums[artistId] = [];
+  }
+  //N^2 approach to not add apparent duplicates to the _albums[artistId] array
+  for(var i = 0; i < albumsArray.length; i++){
+    var duplicate = false;
+    for(var j = 0; j < _albums[artistId].length; j++){
+      if(_albums[artistId][j].name && _albums[artistId][j].name == albumsArray[i].name){
+        duplicate = true;
+      }
+    }
+    if(!duplicate){
+      _albums[artistId].push(albumsArray[i]);
+    }
+  }
 };
 
 ArtistStore.currentArtist = function(){
