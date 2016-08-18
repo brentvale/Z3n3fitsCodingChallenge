@@ -9,8 +9,11 @@ var AlbumTracksModal = React.createClass({
     return(
       <div className="modal-underlay">
         <div className="tracks-modal center-block">
-          <span className="glyphicon glyphicon-remove" onClick={this.handleCloseModal}></span>
+          <div className="close-container">
+            <span className="glyphicon glyphicon-remove" onClick={this.handleCloseModal}></span>
+          </div>
           <div className="tracks-list-container">
+            <h3 className="center-block">{this.props.albumName}</h3>
             <ul className="tracks-list">
               {this.props.tracks.map(function(track, idx){
                 return <li key={idx}><TrackShow track={track} /></li>;

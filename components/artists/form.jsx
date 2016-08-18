@@ -17,7 +17,7 @@ var ArtistForm = React.createClass({
                 onChange={this.handleUpdateForm}
                 placeholder="Search For Artist"/>
         
-        <input type="submit" value="Search" readOnly />
+        <input className="submit-button" type="submit" value="SEARCH" readOnly />
       </form>
     )
   }

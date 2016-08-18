@@ -32,7 +32,8 @@ var AlbumShow = React.createClass({
     var targetImage = this.props.album.images[1]; //300x300
     var tracksModal = (this.state.modalShowing > 0) ?   
                       <AlbumTracksModal tracks={this.state.tracks}
-                                        toggleDisplay={this.toggleDisplayAlbumInfo}/> :
+                                        toggleDisplay={this.toggleDisplayAlbumInfo}
+                                        albumName={this.props.album.name}/> :
                       <div className="display-none"></div>;
     return(
       <div className="center-block album-container">

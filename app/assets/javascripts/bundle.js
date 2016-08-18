@@ -28490,7 +28490,7 @@
 	      React.createElement("input", { type: "text",
 	        onChange: this.handleUpdateForm,
 	        placeholder: "Search For Artist" }),
-	      React.createElement("input", { type: "submit", value: "Search", readOnly: true })
+	      React.createElement("input", { className: "submit-button", type: "submit", value: "SEARCH", readOnly: true })
 	    );
 	  }
 	});
@@ -28667,7 +28667,8 @@
 	    //this.props.album.images[2]; //300x300
 	    var targetImage = this.props.album.images[1]; //300x300
 	    var tracksModal = this.state.modalShowing > 0 ? React.createElement(AlbumTracksModal, { tracks: this.state.tracks,
-	      toggleDisplay: this.toggleDisplayAlbumInfo }) : React.createElement('div', { className: 'display-none' });
+	      toggleDisplay: this.toggleDisplayAlbumInfo,
+	      albumName: this.props.album.name }) : React.createElement('div', { className: 'display-none' });
 	    return React.createElement(
 	      'div',
 	      { className: 'center-block album-container' },
@@ -28712,10 +28713,19 @@
 	      React.createElement(
 	        'div',
 	        { className: 'tracks-modal center-block' },
-	        React.createElement('span', { className: 'glyphicon glyphicon-remove', onClick: this.handleCloseModal }),
+	        React.createElement(
+	          'div',
+	          { className: 'close-container' },
+	          React.createElement('span', { className: 'glyphicon glyphicon-remove', onClick: this.handleCloseModal })
+	        ),
 	        React.createElement(
 	          'div',
 	          { className: 'tracks-list-container' },
+	          React.createElement(
+	            'h3',
+	            { className: 'center-block' },
+	            this.props.albumName
+	          ),
 	          React.createElement(
 	            'ul',
 	            { className: 'tracks-list' },
@@ -28765,7 +28775,11 @@
 	      React.createElement(
 	        "p",
 	        null,
-	        this.props.track.name,
+	        React.createElement(
+	          "span",
+	          null,
+	          this.props.track.name
+	        ),
 	        " ",
 	        React.createElement(
 	          "span",

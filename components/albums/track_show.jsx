@@ -16,7 +16,7 @@ var TrackShow = React.createClass({
     var trackTime = this.timeToDisplayFormat(this.props.track.duration_ms);
     return(
       <div className="track-show">
-        <p>{this.props.track.name} <span>{trackTime}</span></p>
+        <p><span>{this.props.track.name}</span> <span>{trackTime}</span></p>
       </div>
     )
   }
