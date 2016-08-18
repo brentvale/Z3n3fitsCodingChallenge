@@ -5,11 +5,12 @@ var ArtistStore = new Store(AppDispatcher);
 
 var _artists = {},
     _albums = {},
-    _currentArtist = {};
+    _currentArtist = {},
+    _tracks = {};
 
 var addNewArtist = function(artist){
   _artists[artist.id] = artist;
-  _currentArtist = artist
+  _currentArtist = artist;
 };
 
 var addAlbumsToArtist = function(albumsArray, artistId){
@@ -30,6 +31,10 @@ var addAlbumsToArtist = function(albumsArray, artistId){
   }
 };
 
+var addTracksToAlbum = function(tracksArray, albumId){
+  _tracks[albumId] = tracksArray;
+};
+
 ArtistStore.currentArtist = function(){
   return _currentArtist;
 };
@@ -42,6 +47,13 @@ ArtistStore.albums = function(artistId){
   return _albums[artistId];
 };
 
+ArtistStore.tracksByAlbumId = function(albumId){
+  if(typeof(_tracks[albumId]) == "undefined"){
+    _tracks[albumId] = [];
+  } 
+  return _tracks[albumId].slice(0);
+};
+
 ArtistStore.__onDispatch = function (payload) {
   switch(payload.actionType) {
     case ArtistConstants.RECEIVE_SINGLE_ARTIST:
@@ -50,6 +62,10 @@ ArtistStore.__onDispatch = function (payload) {
       break;
     case ArtistConstants.RECEIVE_ARTIST_ALBUMS:
       addAlbumsToArtist(payload.albums, payload.artistId);
+      ArtistStore.__emitChange();
+      break;
+    case ArtistConstants.RECEIVE_TRACKS_FOR_ALBUM:
+      addTracksToAlbum(payload.tracks, payload.albumId);
       ArtistStore.__emitChange();
       break;
   }

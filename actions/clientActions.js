@@ -6,5 +6,8 @@ module.exports = {
   },
   fetchArtistAlbumsById: function(artistId){
     ApiUtil.fetchArtistAlbumsById(artistId);
+  },
+  fetchTracksByAlbumId: function(albumId){
+    ApiUtil.fetchTracksByAlbumId(albumId);
   }
 }

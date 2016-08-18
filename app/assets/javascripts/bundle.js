@@ -21534,7 +21534,8 @@
 	
 	var _artists = {},
 	    _albums = {},
-	    _currentArtist = {};
+	    _currentArtist = {},
+	    _tracks = {};
 	
 	var addNewArtist = function (artist) {
 	  _artists[artist.id] = artist;
@@ -21559,6 +21560,10 @@
 	  }
 	};
 	
+	var addTracksToAlbum = function (tracksArray, albumId) {
+	  _tracks[albumId] = tracksArray;
+	};
+	
 	ArtistStore.currentArtist = function () {
 	  return _currentArtist;
 	};
@@ -21571,6 +21576,13 @@
 	  return _albums[artistId];
 	};
 	
+	ArtistStore.tracksByAlbumId = function (albumId) {
+	  if (typeof _tracks[albumId] == "undefined") {
+	    _tracks[albumId] = [];
+	  }
+	  return _tracks[albumId].slice(0);
+	};
+	
 	ArtistStore.__onDispatch = function (payload) {
 	  switch (payload.actionType) {
 	    case ArtistConstants.RECEIVE_SINGLE_ARTIST:
@@ -21579,6 +21591,10 @@
 	      break;
 	    case ArtistConstants.RECEIVE_ARTIST_ALBUMS:
 	      addAlbumsToArtist(payload.albums, payload.artistId);
+	      ArtistStore.__emitChange();
+	      break;
+	    case ArtistConstants.RECEIVE_TRACKS_FOR_ALBUM:
+	      addTracksToAlbum(payload.tracks, payload.albumId);
 	      ArtistStore.__emitChange();
 	      break;
 	  }
@@ -28350,7 +28366,8 @@
 
 	module.exports = {
 	  RECEIVE_SINGLE_ARTIST: "RECEIVE_SINGLE_ARTIST",
-	  RECEIVE_ARTIST_ALBUMS: "RECEIVE_ARTIST_ALBUMS"
+	  RECEIVE_ARTIST_ALBUMS: "RECEIVE_ARTIST_ALBUMS",
+	  RECEIVE_TRACKS_FOR_ALBUM: "RECEIVE_TRACKS_FOR_ALBUM"
 	};
 
 /***/ },
@@ -28365,6 +28382,9 @@
 	  },
 	  fetchArtistAlbumsById: function (artistId) {
 	    ApiUtil.fetchArtistAlbumsById(artistId);
+	  },
+	  fetchTracksByAlbumId: function (albumId) {
+	    ApiUtil.fetchTracksByAlbumId(albumId);
 	  }
 	};
 
@@ -28399,6 +28419,19 @@
 	        console.log("errored out in the request");
 	      }
 	    });
+	  },
+	  fetchTracksByAlbumId: function (albumId) {
+	    //assumption that an album will not have more than 50 tracks
+	    $.ajax({
+	      type: "GET",
+	      url: "https://api.spotify.com/v1/albums/" + albumId + "/tracks?limit=50",
+	      success: function (resp) {
+	        ServerActions.receiveTracksForAlbum({ tracks: resp.items, albumId: albumId });
+	      },
+	      error: function (resp) {
+	        console.log("errored out in the request");
+	      }
+	    });
 	  }
 	};
 
@@ -28421,6 +28454,13 @@
 	      actionType: ArtistConstants.RECEIVE_ARTIST_ALBUMS,
 	      albums: respObj.albums,
 	      artistId: respObj.artistId
+	    });
+	  },
+	  receiveTracksForAlbum: function (respObj) {
+	    Dispatcher.dispatch({
+	      actionType: ArtistConstants.RECEIVE_TRACKS_FOR_ALBUM,
+	      tracks: respObj.tracks,
+	      albumId: respObj.albumId
 	    });
 	  }
 	};
@@ -28572,7 +28612,7 @@
 	  render: function () {
 	    return React.createElement(
 	      'ul',
-	      null,
+	      { className: 'albums' },
 	      this.props.albums.map(function (album, idx) {
 	        return React.createElement(
 	          'li',
@@ -28593,36 +28633,152 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
+	var ClientActions = __webpack_require__(198);
+	var ArtistStore = __webpack_require__(175);
+	
+	var AlbumTracksModal = __webpack_require__(207).AlbumTracksModal;
 	
 	var AlbumShow = React.createClass({
-	  displayName: "AlbumShow",
+	  displayName: 'AlbumShow',
 	
+	  getInitialState: function () {
+	    return { modalShowing: false, tracks: ArtistStore.tracksByAlbumId(this.props.album.id) };
+	  },
+	  componentDidMount: function () {
+	    this.trackListener = ArtistStore.addListener(this._onChange);
+	  },
+	  componentWillUnmount: function () {
+	    this.tracksListener.remove();
+	  },
+	  toggleDisplayAlbumInfo: function () {
+	    if (this.state.tracks.length == 0) {
+	      ClientActions.fetchTracksByAlbumId(this.props.album.id);
+	    }
+	
+	    this.setState({ modalShowing: !this.state.modalShowing });
+	  },
+	  _onChange: function () {
+	    this.setState({ tracks: ArtistStore.tracksByAlbumId(this.props.album.id) });
+	  },
 	  render: function () {
 	    var altTextImage = this.props.album.name + " Album Cover";
 	    //this.props.album.images[0]; //300x300
 	    //this.props.album.images[1]; //300x300
 	    //this.props.album.images[2]; //300x300
 	    var targetImage = this.props.album.images[1]; //300x300
-	
+	    var tracksModal = this.state.modalShowing > 0 ? React.createElement(AlbumTracksModal, { tracks: this.state.tracks,
+	      toggleDisplay: this.toggleDisplayAlbumInfo }) : React.createElement('div', { className: 'display-none' });
 	    return React.createElement(
-	      "div",
-	      { className: "center-block" },
-	      React.createElement("img", { className: "album-cover center-block",
+	      'div',
+	      { className: 'center-block album-container' },
+	      React.createElement('img', { className: 'album album-cover center-block',
 	        src: targetImage.url,
 	        alt: altTextImage,
-	        height: targetImage.height,
-	        width: targetImage.width }),
+	        onClick: this.toggleDisplayAlbumInfo }),
+	      React.createElement('img', { className: 'album vinyl-record center-block',
+	        src: '../../images/vinyl_record.png' }),
 	      React.createElement(
-	        "p",
-	        { className: "album-title" },
+	        'p',
+	        { className: 'album-title center-block' },
 	        this.props.album.name
-	      )
+	      ),
+	      tracksModal
 	    );
 	  }
 	});
 	
 	module.exports = {
 	  AlbumShow: AlbumShow
+	};
+
+/***/ },
+/* 206 */,
+/* 207 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var TrackShow = __webpack_require__(208).TrackShow;
+	
+	var AlbumTracksModal = React.createClass({
+	  displayName: 'AlbumTracksModal',
+	
+	  handleCloseModal: function () {
+	    this.props.toggleDisplay();
+	  },
+	  render: function () {
+	    return React.createElement(
+	      'div',
+	      { className: 'modal-underlay' },
+	      React.createElement(
+	        'div',
+	        { className: 'tracks-modal center-block' },
+	        React.createElement('span', { className: 'glyphicon glyphicon-remove', onClick: this.handleCloseModal }),
+	        React.createElement(
+	          'div',
+	          { className: 'tracks-list-container' },
+	          React.createElement(
+	            'ul',
+	            { className: 'tracks-list' },
+	            this.props.tracks.map(function (track, idx) {
+	              return React.createElement(
+	                'li',
+	                { key: idx },
+	                React.createElement(TrackShow, { track: track })
+	              );
+	            })
+	          )
+	        )
+	      )
+	    );
+	  }
+	});
+	
+	module.exports = {
+	  AlbumTracksModal: AlbumTracksModal
+	};
+
+/***/ },
+/* 208 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	
+	var TrackShow = React.createClass({
+	  displayName: "TrackShow",
+	
+	  timeToDisplayFormat: function (time) {
+	    var timeInSeconds = time / 1000;
+	
+	    var minutes = parseInt(timeInSeconds / 60);
+	    var seconds = parseInt(timeInSeconds % 60);
+	
+	    if (seconds < 10) {
+	      seconds = "0" + seconds;
+	    }
+	    return minutes + ":" + seconds;
+	  },
+	  render: function () {
+	    var trackTime = this.timeToDisplayFormat(this.props.track.duration_ms);
+	    return React.createElement(
+	      "div",
+	      { className: "track-show" },
+	      React.createElement(
+	        "p",
+	        null,
+	        this.props.track.name,
+	        " ",
+	        React.createElement(
+	          "span",
+	          null,
+	          trackTime
+	        )
+	      )
+	    );
+	  }
+	});
+	
+	module.exports = {
+	  TrackShow: TrackShow
 	};
 
 /***/ }
