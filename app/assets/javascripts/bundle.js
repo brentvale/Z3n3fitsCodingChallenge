@@ -56,16 +56,39 @@
 	var ArtistPage = React.createClass({
 	  displayName: 'ArtistPage',
 	
+	  handleSubmitForm: function (formData) {
+	    // band names that use characters that are not numbers or letters:  
+	    // https://www.theguardian.com/music/musicblog/2010/aug/11/bands-names-symbols
+	    // for assignment: using regex to make sure there are only spaces characters and digits
+	    if (!formData.match(/[^a-z\d\s]/i)) {
+	      var requestName = this.scrubData(formData);
+	      ClientActions.fetchArtistByName(requestName);
+	    } else {
+	      console.log("error message to user");
+	    }
+	  },
+	  scrubData: function (formData) {
+	    //remove extra white spaces
+	    formData = formData.replace(/\s\s+/g, ' ');
+	
+	    //remove space from front and end of form data
+	    formData = formData.trim();
+	
+	    //prepare form data for API by replacing spaces with %20
+	    formData = formData.replace(/\s/g, '%20');
+	
+	    return formData;
+	  },
 	  render: function () {
 	    return React.createElement(
 	      'div',
 	      null,
-	      React.createElement(ArtistForm, null)
+	      React.createElement(ArtistShow, null)
 	    );
 	  }
 	});
 	
-	document.addEventListener("DOMContentLoaded", function () {
+	$(function () {
 	  ReactDOM.render(React.createElement(ArtistPage, null), document.getElementById('reactApp'));
 	});
 
@@ -21484,23 +21507,18 @@
 	var ArtistConstants = __webpack_require__(197);
 	var ArtistStore = new Store(AppDispatcher);
 	
-	var _artists = [];
+	var _currentArtist = null;
 	
 	var addNewArtist = function (artist) {
-	  _artists.push(artist);
+	  if (artist) {
+	    _currentArtist = artist;
+	  } else {
+	    _currentArtist = null;
+	  }
 	};
 	
 	ArtistStore.currentArtist = function () {
-	  if (_artists.length == 0) {
-	    return null;
-	  } else {
-	    return _artists[_artists.length - 1];
-	  }
-	  // if(Object.keys(_currentArtist).length === 0 && _currentArtist.constructor == Object){
-	  //     return null;
-	  //   } else {
-	  //     return _currentArtist;
-	  //   }
+	  return _currentArtist;
 	};
 	
 	ArtistStore.__onDispatch = function (payload) {
@@ -28304,6 +28322,7 @@
 	      type: "GET",
 	      url: "https://api.spotify.com/v1/search?q=" + artistName + "&type=artist",
 	      success: function (resp) {
+	        alert("success");
 	        var targetArtist = resp.artists.items[0];
 	        ServerActions.receiveArtist(targetArtist);
 	      },
@@ -28336,20 +28355,27 @@
 
 	var React = __webpack_require__(1);
 	
-	var SearchForm = React.createClass({
-	  displayName: 'SearchForm',
+	var ArtistForm = React.createClass({
+	  displayName: "ArtistForm",
 	
+	  handleSubmitForm: function () {
+	    this.props.handleSubmitForm($("#artistForm").val());
+	  },
 	  render: function () {
 	    return React.createElement(
-	      'div',
-	      null,
-	      'Search Form'
+	      "form",
+	      { onSubmit: this.handleSubmitForm },
+	      React.createElement("input", { id: "artistForm",
+	        type: "text",
+	        onChange: this.props.handleUpdateForm,
+	        placeholder: "Search For Artist" }),
+	      React.createElement("input", { type: "submit", value: "Search", readOnly: true })
 	    );
 	  }
 	});
 	
 	module.exports = {
-	  SearchForm: SearchForm
+	  ArtistForm: ArtistForm
 	};
 
 /***/ },
@@ -28357,26 +28383,42 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
+	var ArtistStore = __webpack_require__(175);
 	
 	var ArtistShow = React.createClass({
-	  displayName: 'ArtistShow',
+	  displayName: "ArtistShow",
 	
-	  getInitialState: function () {},
+	  getInitialState: function () {
+	    return { artist: ArtistStore.currentArtist() };
+	  },
 	  componentDidMount: function () {
 	    this.artistListener = ArtistStore.addListener(this._onChange);
 	  },
 	  componentWillUnmount: function () {
 	    this.artistListener.remove();
 	  },
-	  _onChange: function () {},
+	  _onChange: function () {
+	    this.setState({ artist: ArtistStore.currentArtist() });
+	  },
 	  render: function () {
+	    if (this.state.artist == null) {
+	      return React.createElement(
+	        "div",
+	        null,
+	        React.createElement(
+	          "h1",
+	          null,
+	          "ArtistShow"
+	        )
+	      );
+	    }
 	    return React.createElement(
-	      'div',
+	      "div",
 	      null,
 	      React.createElement(
-	        'h1',
+	        "h1",
 	        null,
-	        'ArtistShow'
+	        this.props.artist.name
 	      )
 	    );
 	  }

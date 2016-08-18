@@ -6,6 +6,7 @@ module.exports = {
       type: "GET",
       url: "https://api.spotify.com/v1/search?q=" + artistName + "&type=artist",
       success: function(resp){
+        alert("success");
         var targetArtist = resp.artists.items[0];
         ServerActions.receiveArtist(targetArtist);
       },

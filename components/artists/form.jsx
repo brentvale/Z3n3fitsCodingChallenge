@@ -1,13 +1,23 @@
 var React = require('react');
 
-var SearchForm = React.createClass({
+var ArtistForm = React.createClass({
+  handleSubmitForm: function(){
+    this.props.handleSubmitForm($("#artistForm").val());
+  },
   render: function(){
     return(
-      <div>Search Form</div>
+      <form onSubmit={this.handleSubmitForm}>
+        <input  id="artistForm"
+                type="text" 
+                onChange={this.props.handleUpdateForm}
+                placeholder="Search For Artist"/>
+                
+        <input type="submit" value="Search" readOnly />
+      </form>
     )
   }
 });
 
 module.exports = {
-  SearchForm: SearchForm
+  ArtistForm: ArtistForm
 }

@@ -3,23 +3,18 @@ var AppDispatcher = require('../dispatcher/dispatcher.js');
 var ArtistConstants = require('../constants/artistConstants.js');
 var ArtistStore = new Store(AppDispatcher);
 
-var _artists = [];
+var _currentArtist = null;
 
 var addNewArtist = function(artist){
-  _artists.push(artist);
+  if(artist){
+    _currentArtist = artist;
+  } else {
+    _currentArtist = null;
+  }
 };
 
 ArtistStore.currentArtist = function(){
-  if(_artists.length == 0){
-    return null;
-  } else {
-    return _artists[_artists.length-1];
-  }
-  // if(Object.keys(_currentArtist).length === 0 && _currentArtist.constructor == Object){
-//     return null;
-//   } else {
-//     return _currentArtist;
-//   }
+  return _currentArtist;
 };
 
 ArtistStore.__onDispatch = function (payload) {
