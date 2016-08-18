@@ -50,60 +50,17 @@
 	var ArtistStore = __webpack_require__(175);
 	var ClientActions = __webpack_require__(198);
 	
-	var SearchForm = __webpack_require__(201).SearchForm;
-	var ArtistInfo = __webpack_require__(202).ArtistInfo;
+	var ArtistForm = __webpack_require__(201).ArtistForm;
+	var ArtistShow = __webpack_require__(202).ArtistShow;
 	
 	var ArtistPage = React.createClass({
 	  displayName: 'ArtistPage',
 	
-	  getInitialState: function () {
-	    return { artist: ArtistStore.currentArtist() };
-	  },
-	  componentDidMount: function () {
-	    this.newArtistListener = ArtistStore.addListener(this._onChange);
-	    if (this.state.artist == null) {
-	      ClientActions.fetchArtistByName("Beyonce");
-	    }
-	  },
-	  componentWillUnmount: function () {
-	    this.newArtistListener.remove();
-	  },
-	  submitSearchForm: function (formVal) {
-	    // band names that use characters that are not numbers or letters:  
-	    // https://www.theguardian.com/music/musicblog/2010/aug/11/bands-names-symbols
-	    // for assignment: using regex to make sure there are only spaces characters and digits
-	    if (!formVal.match(/[^a-z\d\s]/i)) {
-	      var formData = this.scrubData(formVal);
-	      ClientActions.fetchArtistByName(formData);
-	    } else {
-	      console.log("error message to user");
-	    }
-	  },
-	  scrubData: function (formData) {
-	    //remove extra white spaces
-	    formData = formData.replace(/\s\s+/g, ' ');
-	
-	    //remove space from front and end of form data
-	    formData = formData.trim();
-	
-	    //prepare form data for API by replacing spaces with %20
-	    formData = formData.replace(/\s/g, '%20');
-	
-	    return formData;
-	  },
-	  _onChange: function () {
-	    this.setState({ artist: ArtistStore.currentArtist() });
-	  },
 	  render: function () {
-	    if (this.state.artist == null) {
-	      return React.createElement(SearchForm, { submitSearchForm: this.submitSearchForm });
-	    };
-	
 	    return React.createElement(
 	      'div',
 	      null,
-	      React.createElement(SearchForm, { submitSearchForm: this.submitSearchForm }),
-	      React.createElement(ArtistInfo, { artist: this.state.artist })
+	      React.createElement(ArtistForm, null)
 	    );
 	  }
 	});
@@ -28380,29 +28337,13 @@
 	var React = __webpack_require__(1);
 	
 	var SearchForm = React.createClass({
-	  displayName: "SearchForm",
+	  displayName: 'SearchForm',
 	
-	  getInitialState: function () {
-	    return { searchFormVal: "" };
-	  },
-	  handleChange: function (event) {
-	    this.setState({ searchFormVal: event.target.value });
-	  },
-	  handleSubmit: function () {
-	    this.props.submitSearchForm(this.state.searchFormVal);
-	  },
 	  render: function () {
 	    return React.createElement(
-	      "form",
-	      { onSubmit: this.handleSubmit },
-	      React.createElement(
-	        "label",
-	        null,
-	        React.createElement("input", { type: "text",
-	          onChange: this.handleChange,
-	          placeholder: "Search For Artist" })
-	      ),
-	      React.createElement("input", { type: "Submit", value: "Search", readOnly: true })
+	      'div',
+	      null,
+	      'Search Form'
 	    );
 	  }
 	});
@@ -28417,41 +28358,32 @@
 
 	var React = __webpack_require__(1);
 	
-	var ArtistInfo = React.createClass({
-	  displayName: "ArtistInfo",
+	var ArtistShow = React.createClass({
+	  displayName: 'ArtistShow',
 	
+	  getInitialState: function () {},
+	  componentDidMount: function () {
+	    this.artistListener = ArtistStore.addListener(this._onChange);
+	  },
+	  componentWillUnmount: function () {
+	    this.artistListener.remove();
+	  },
+	  _onChange: function () {},
 	  render: function () {
-	    var altImageText = this.props.artist.name + " Image";
-	
-	    //  this.props.artist.images[0] 1000 x 1000
-	    //  this.props.artist.images[1] 640  x 640
-	    //  this.props.artist.images[2] 200  x 200
-	    //  this.props.artist.images[3] 64   x 64
-	
-	    var targetImage = this.props.artist.images[2];
-	
 	    return React.createElement(
-	      "div",
+	      'div',
 	      null,
 	      React.createElement(
-	        "h1",
+	        'h1',
 	        null,
-	        this.props.artist.name
-	      ),
-	      React.createElement(
-	        "div",
-	        null,
-	        React.createElement("img", { alt: altImageText,
-	          src: targetImage.url,
-	          height: targetImage.height,
-	          width: targetImage.width })
+	        'ArtistShow'
 	      )
 	    );
 	  }
 	});
 	
 	module.exports = {
-	  ArtistInfo: ArtistInfo
+	  ArtistShow: ArtistShow
 	};
 
 /***/ }
