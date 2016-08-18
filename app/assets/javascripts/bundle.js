@@ -56,6 +56,19 @@
 	var ArtistPage = React.createClass({
 	  displayName: 'ArtistPage',
 	
+	  getInitialState: function () {
+	    return { artist: {} };
+	  },
+	  componentDidMount: function () {
+	    this.artistPageListener = ArtistStore.addListener(this._onChange);
+	    ClientActions.fetchArtistByName("Beyonce");
+	  },
+	  componentWillUnmount: function () {
+	    this.artistPageListener.remove();
+	  },
+	  _onChange: function () {
+	    this.setState({ artist: ArtistStore.currentArtist() });
+	  },
 	  handleSubmitForm: function (formData) {
 	    // band names that use characters that are not numbers or letters:  
 	    // https://www.theguardian.com/music/musicblog/2010/aug/11/bands-names-symbols
@@ -63,6 +76,7 @@
 	    if (!formData.match(/[^a-z\d\s]/i)) {
 	      var requestName = this.scrubData(formData);
 	      ClientActions.fetchArtistByName(requestName);
+	      this.setState({ enteredName: requestName });
 	    } else {
 	      console.log("error message to user");
 	    }
@@ -80,11 +94,22 @@
 	    return formData;
 	  },
 	  render: function () {
-	    return React.createElement(
-	      'div',
-	      null,
-	      React.createElement(ArtistShow, null)
-	    );
+	    if (Object.keys(this.state.artist).length === 0 && this.state.artist.constructor == Object) {
+	      return React.createElement(
+	        'div',
+	        null,
+	        React.createElement(ArtistForm, { handleUpdateForm: this.handleUpdateForm,
+	          handleSubmitForm: this.handleSubmitForm })
+	      );
+	    } else {
+	      return React.createElement(
+	        'div',
+	        null,
+	        React.createElement(ArtistForm, { handleUpdateForm: this.handleUpdateForm,
+	          handleSubmitForm: this.handleSubmitForm }),
+	        React.createElement(ArtistShow, { artist: this.state.artist })
+	      );
+	    }
 	  }
 	});
 	
@@ -21507,24 +21532,39 @@
 	var ArtistConstants = __webpack_require__(197);
 	var ArtistStore = new Store(AppDispatcher);
 	
-	var _currentArtist = null;
+	var _artists = {},
+	    _albums = {},
+	    _currentArtist = {};
 	
 	var addNewArtist = function (artist) {
-	  if (artist) {
-	    _currentArtist = artist;
-	  } else {
-	    _currentArtist = null;
-	  }
+	  _artists[artist.id] = artist;
+	  _currentArtist = artist;
+	};
+	
+	var addAlbumsToArtist = function (albumsArray, artistId) {
+	  _albums[artistId] = albumsArray;
 	};
 	
 	ArtistStore.currentArtist = function () {
 	  return _currentArtist;
 	};
 	
+	ArtistStore.findArtist = function (id) {
+	  return _artists[id];
+	};
+	
+	ArtistStore.albums = function (artistId) {
+	  return _albums[artistId];
+	};
+	
 	ArtistStore.__onDispatch = function (payload) {
 	  switch (payload.actionType) {
 	    case ArtistConstants.RECEIVE_SINGLE_ARTIST:
 	      addNewArtist(payload.artist);
+	      ArtistStore.__emitChange();
+	      break;
+	    case ArtistConstants.RECEIVE_ARTIST_ALBUMS:
+	      addAlbumsToArtist(payload.albums, payload.artistId);
 	      ArtistStore.__emitChange();
 	      break;
 	  }
@@ -28295,7 +28335,8 @@
 /***/ function(module, exports) {
 
 	module.exports = {
-	  RECEIVE_SINGLE_ARTIST: "RECEIVE_SINGLE_ARTIST"
+	  RECEIVE_SINGLE_ARTIST: "RECEIVE_SINGLE_ARTIST",
+	  RECEIVE_ARTIST_ALBUMS: "RECEIVE_ARTIST_ALBUMS"
 	};
 
 /***/ },
@@ -28307,6 +28348,9 @@
 	module.exports = {
 	  fetchArtistByName: function (artistName) {
 	    ApiUtil.fetchArtistByName(artistName);
+	  },
+	  fetchArtistAlbumsById: function (artistId) {
+	    ApiUtil.fetchArtistAlbumsById(artistId);
 	  }
 	};
 
@@ -28322,9 +28366,20 @@
 	      type: "GET",
 	      url: "https://api.spotify.com/v1/search?q=" + artistName + "&type=artist",
 	      success: function (resp) {
-	        alert("success");
 	        var targetArtist = resp.artists.items[0];
 	        ServerActions.receiveArtist(targetArtist);
+	      },
+	      error: function (resp) {
+	        console.log("errored out in the request");
+	      }
+	    });
+	  },
+	  fetchArtistAlbumsById: function (artistId) {
+	    $.ajax({
+	      type: "GET",
+	      url: "https://api.spotify.com/v1/artists/" + artistId + "/albums?limit=50",
+	      success: function (resp) {
+	        ServerActions.receiveArtistAlbums({ albums: resp.items, artistId: artistId });
 	      },
 	      error: function (resp) {
 	        console.log("errored out in the request");
@@ -28346,6 +28401,13 @@
 	      actionType: ArtistConstants.RECEIVE_SINGLE_ARTIST,
 	      artist: artist
 	    });
+	  },
+	  receiveArtistAlbums: function (respObj) {
+	    Dispatcher.dispatch({
+	      actionType: ArtistConstants.RECEIVE_ARTIST_ALBUMS,
+	      albums: respObj.albums,
+	      artistId: respObj.artistId
+	    });
 	  }
 	};
 
@@ -28358,16 +28420,21 @@
 	var ArtistForm = React.createClass({
 	  displayName: "ArtistForm",
 	
+	  getInitialState: function () {
+	    return { artistSearch: "" };
+	  },
 	  handleSubmitForm: function () {
-	    this.props.handleSubmitForm($("#artistForm").val());
+	    this.props.handleSubmitForm(this.state.artistSearch);
+	  },
+	  handleUpdateForm: function (event) {
+	    this.setState({ artistSearch: event.target.value });
 	  },
 	  render: function () {
 	    return React.createElement(
 	      "form",
 	      { onSubmit: this.handleSubmitForm },
-	      React.createElement("input", { id: "artistForm",
-	        type: "text",
-	        onChange: this.props.handleUpdateForm,
+	      React.createElement("input", { type: "text",
+	        onChange: this.handleUpdateForm,
 	        placeholder: "Search For Artist" }),
 	      React.createElement("input", { type: "submit", value: "Search", readOnly: true })
 	    );
@@ -28384,48 +28451,110 @@
 
 	var React = __webpack_require__(1);
 	var ArtistStore = __webpack_require__(175);
+	var ClientActions = __webpack_require__(198);
+	var AlbumsIndex = __webpack_require__(204).AlbumsIndex;
 	
 	var ArtistShow = React.createClass({
-	  displayName: "ArtistShow",
+	  displayName: 'ArtistShow',
 	
 	  getInitialState: function () {
-	    return { artist: ArtistStore.currentArtist() };
+	    return { albums: [] };
 	  },
 	  componentDidMount: function () {
 	    this.artistListener = ArtistStore.addListener(this._onChange);
+	    ClientActions.fetchArtistAlbumsById(this.props.artist.id);
 	  },
 	  componentWillUnmount: function () {
 	    this.artistListener.remove();
 	  },
 	  _onChange: function () {
-	    this.setState({ artist: ArtistStore.currentArtist() });
+	    this.setState({ albums: ArtistStore.albums(this.props.artist.id) });
 	  },
 	  render: function () {
-	    if (this.state.artist == null) {
-	      return React.createElement(
-	        "div",
-	        null,
-	        React.createElement(
-	          "h1",
-	          null,
-	          "ArtistShow"
-	        )
-	      );
-	    }
+	    var altImageText = this.props.artist.name + " Image";
+	    //  this.props.artist.images[0] 1000 x 1000
+	    //  this.props.artist.images[1] 640  x 640
+	    //  this.props.artist.images[2] 200  x 200
+	    //  this.props.artist.images[3] 64   x 64
+	    var targetImage = this.props.artist.images[2];
+	
+	    var albumsList = this.state.albums.length == 0 ? React.createElement('div', null) : React.createElement(AlbumsIndex, { albums: this.state.albums });
+	
 	    return React.createElement(
-	      "div",
+	      'div',
 	      null,
 	      React.createElement(
-	        "h1",
+	        'h1',
 	        null,
 	        this.props.artist.name
-	      )
+	      ),
+	      React.createElement(
+	        'div',
+	        null,
+	        React.createElement('img', { alt: altImageText,
+	          src: targetImage.url,
+	          height: targetImage.height,
+	          width: targetImage.width })
+	      ),
+	      albumsList
 	    );
 	  }
 	});
 	
 	module.exports = {
 	  ArtistShow: ArtistShow
+	};
+
+/***/ },
+/* 203 */,
+/* 204 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var AlbumShow = __webpack_require__(205).AlbumShow;
+	
+	var AlbumsIndex = React.createClass({
+	  displayName: 'AlbumsIndex',
+	
+	  render: function () {
+	    return React.createElement(
+	      'ul',
+	      null,
+	      this.props.albums.map(function (album, idx) {
+	        return React.createElement(
+	          'li',
+	          { className: 'col-xs-12 col-sm-4 col-md-3', key: idx },
+	          React.createElement(AlbumShow, { album: album })
+	        );
+	      })
+	    );
+	  }
+	});
+	
+	module.exports = {
+	  AlbumsIndex: AlbumsIndex
+	};
+
+/***/ },
+/* 205 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	
+	var AlbumShow = React.createClass({
+	  displayName: "AlbumShow",
+	
+	  render: function () {
+	    return React.createElement(
+	      "div",
+	      { className: "center-block" },
+	      this.props.album.name
+	    );
+	  }
+	});
+	
+	module.exports = {
+	  AlbumShow: AlbumShow
 	};
 
 /***/ }

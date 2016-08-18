@@ -1,15 +1,20 @@
 var React = require('react');
 
 var ArtistForm = React.createClass({
+  getInitialState: function(){
+    return { artistSearch: "" }
+  },
   handleSubmitForm: function(){
-    this.props.handleSubmitForm($("#artistForm").val());
+    this.props.handleSubmitForm(this.state.artistSearch);
+  },
+  handleUpdateForm: function(event){
+    this.setState({artistSearch: event.target.value});
   },
   render: function(){
     return(
       <form onSubmit={this.handleSubmitForm}>
-        <input  id="artistForm"
-                type="text" 
-                onChange={this.props.handleUpdateForm}
+        <input  type="text" 
+                onChange={this.handleUpdateForm}
                 placeholder="Search For Artist"/>
                 
         <input type="submit" value="Search" readOnly />
