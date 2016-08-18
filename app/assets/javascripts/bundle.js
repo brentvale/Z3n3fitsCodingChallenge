@@ -57,23 +57,23 @@
 	  displayName: 'ArtistPage',
 	
 	  getInitialState: function () {
-	    return { artist: ArtistStore.currentArtist(), searchFieldVal: "" };
+	    return { artist: ArtistStore.currentArtist() };
 	  },
 	  componentDidMount: function () {
 	    this.newArtistListener = ArtistStore.addListener(this._onChange);
+	    if (this.state.artist == null) {
+	      ClientActions.fetchArtistByName("Beyonce");
+	    }
 	  },
 	  componentWillUnmount: function () {
 	    this.newArtistListener.remove();
 	  },
-	  handleSearchFormChange: function (event) {
-	    this.setState({ searchFieldVal: event.target.value });
-	  },
-	  submitSearchForm: function (event) {
+	  submitSearchForm: function (formVal) {
 	    // band names that use characters that are not numbers or letters:  
 	    // https://www.theguardian.com/music/musicblog/2010/aug/11/bands-names-symbols
 	    // for assignment: using regex to make sure there are only spaces characters and digits
-	    if (!this.state.searchFieldVal.match(/[^a-z\d\s]/i)) {
-	      var formData = this.scrubData(this.state.searchFieldVal);
+	    if (!formVal.match(/[^a-z\d\s]/i)) {
+	      var formData = this.scrubData(formVal);
 	      ClientActions.fetchArtistByName(formData);
 	    } else {
 	      console.log("error message to user");
@@ -95,15 +95,14 @@
 	    this.setState({ artist: ArtistStore.currentArtist() });
 	  },
 	  render: function () {
-	    if (Object.keys(this.state.artist).length === 0 && this.state.artist.constructor === Object) {
-	      return React.createElement(SearchForm, { submitSearchForm: this.submitSearchForm,
-	        handleFormChange: this.handleSearchFormChange });
-	    }
+	    if (this.state.artist == null) {
+	      return React.createElement(SearchForm, { submitSearchForm: this.submitSearchForm });
+	    };
+	
 	    return React.createElement(
 	      'div',
 	      null,
-	      React.createElement(SearchForm, { submitSearchForm: this.submitSearchForm,
-	        handleFormChange: this.handleSearchFormChange }),
+	      React.createElement(SearchForm, { submitSearchForm: this.submitSearchForm }),
 	      React.createElement(ArtistInfo, { artist: this.state.artist })
 	    );
 	  }
@@ -21528,18 +21527,23 @@
 	var ArtistConstants = __webpack_require__(197);
 	var ArtistStore = new Store(AppDispatcher);
 	
-	var _currentArtist = {};
+	var _artists = [];
 	
 	var addNewArtist = function (artist) {
-	  return _currentArtist = artist;
+	  _artists.push(artist);
 	};
 	
 	ArtistStore.currentArtist = function () {
-	  if (Object.keys(_currentArtist).length === 0 && _currentArtist.constructor === Object) {
-	    return {};
+	  if (_artists.length == 0) {
+	    return null;
 	  } else {
-	    return _currentArtist;
+	    return _artists[_artists.length - 1];
 	  }
+	  // if(Object.keys(_currentArtist).length === 0 && _currentArtist.constructor == Object){
+	  //     return null;
+	  //   } else {
+	  //     return _currentArtist;
+	  //   }
 	};
 	
 	ArtistStore.__onDispatch = function (payload) {
@@ -28378,16 +28382,24 @@
 	var SearchForm = React.createClass({
 	  displayName: "SearchForm",
 	
+	  getInitialState: function () {
+	    return { searchFormVal: "" };
+	  },
+	  handleChange: function (event) {
+	    this.setState({ searchFormVal: event.target.value });
+	  },
+	  handleSubmit: function () {
+	    this.props.submitSearchForm(this.state.searchFormVal);
+	  },
 	  render: function () {
 	    return React.createElement(
 	      "form",
-	      { onSubmit: this.props.submitSearchForm },
+	      { onSubmit: this.handleSubmit },
 	      React.createElement(
 	        "label",
 	        null,
-	        React.createElement("input", { id: "artistName",
-	          type: "text",
-	          onChange: this.props.handleFormChange,
+	        React.createElement("input", { type: "text",
+	          onChange: this.handleChange,
 	          placeholder: "Search For Artist" })
 	      ),
 	      React.createElement("input", { type: "Submit", value: "Search", readOnly: true })
