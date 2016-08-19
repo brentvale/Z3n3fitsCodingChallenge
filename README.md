@@ -7,11 +7,11 @@ To fire this bad boy up, you can start by cloning this reposity and then running
 
 If you don't already have http-server, you'll need to:
 
-npm install -g http-server
+'npm install -g http-server'
 
 In another terminal tab, you can now load the server by simply running
 
-http-server.
+'http-server'.
 
 Navigate to http://localhost:8080 and you should be all set to go!
 
