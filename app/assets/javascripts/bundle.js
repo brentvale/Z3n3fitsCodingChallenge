@@ -28652,7 +28652,7 @@
 	        alt: altTextImage,
 	        onClick: this.toggleDisplayAlbumInfo }),
 	      React.createElement('img', { className: 'album vinyl-record center-block',
-	        src: '../../images/vinyl_record.png' }),
+	        src: './../../images/vinyl_record.png' }),
 	      React.createElement(
 	        'p',
 	        { className: 'album-title center-block' },
