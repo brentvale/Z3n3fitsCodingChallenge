@@ -43,7 +43,7 @@ var AlbumShow = React.createClass({
               alt={altTextImage} 
               onClick={this.toggleDisplayAlbumInfo}/>
         <img  className="album vinyl-record center-block"
-              src="./../../images/vinyl_record.png" />
+              src="./images/vinyl_record.png" />
         <p className="album-title center-block">{this.props.album.name}</p>
               
         {tracksModal}
