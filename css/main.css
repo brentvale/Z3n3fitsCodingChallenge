@@ -226,7 +226,7 @@ ul.tracks-list{
   .artist-info-container{
     height:400px;
   }
-  ul{
+  ul.albums{
     padding-top: 550px;
   }
 }

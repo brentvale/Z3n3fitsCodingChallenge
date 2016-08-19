@@ -9,8 +9,7 @@ var _artists = {},
     _tracks = {};
 
 var addNewArtist = function(artist){
-  _artists[artist.id] = artist;
-  _currentArtist = artist;
+  return _currentArtist = artist;
 };
 
 var addAlbumsToArtist = function(albumsArray, artistId){
@@ -29,6 +28,7 @@ var addAlbumsToArtist = function(albumsArray, artistId){
       _albums[artistId].push(albumsArray[i]);
     }
   }
+  return;
 };
 
 var addTracksToAlbum = function(tracksArray, albumId){
@@ -37,6 +37,11 @@ var addTracksToAlbum = function(tracksArray, albumId){
 
 ArtistStore.currentArtist = function(){
   return _currentArtist;
+};
+
+ArtistStore.currentArtistName = function(){
+  var artistName = _currentArtist.name || "beyonce";
+  return artistName;
 };
 
 ArtistStore.findArtist = function(id){
